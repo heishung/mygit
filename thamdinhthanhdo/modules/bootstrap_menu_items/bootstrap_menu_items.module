@@ -1,0 +1,109 @@
+<?php
+
+/**
+ * @file
+ * Drupal Module: Bootstrap menu items.
+ *
+ * @author: Alexander Hass <http://drupal.org/user/85918>
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function bootstrap_menu_items_menu() {
+  $items['<header>'] = array(
+    'page callback' => 'drupal_not_found',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['<separator>'] = array(
+    'page callback' => 'drupal_not_found',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements MODULE_preprocess_HOOK().
+ *
+ * Adds appropriate attributes to the list item.
+ *
+ * @see theme_menu_link()
+ */
+function bootstrap_menu_items_preprocess_menu_link(&$variables) {
+  // Add CSS classes to LI element.
+  if (in_array($variables['element']['#href'], array('<header>', '<separator>'))) {
+    switch ($variables['element']['#href']) {
+      case '<header>':
+        $variables['element']['#attributes']['class'][] = 'dropdown-header';
+        break;
+
+      case '<separator>':
+        $variables['element']['#attributes']['class'][] = 'divider';
+        $variables['element']['#attributes']['role'][] = 'separator';
+        break;
+    }
+  }
+}
+
+/**
+ * Override of theme_link().
+ *
+ * This function will render link if it is "header" or "separator". Otherwise
+ * it will call originally overwritten menu_item_link function.
+ */
+function bootstrap_menu_items_link(array $variables) {
+  if (in_array($variables['path'], array('<header>', '<separator>'))) {
+    switch ($variables['path']) {
+      case '<header>':
+        $title = check_plain($variables['text']);
+        break;
+
+      case '<separator>':
+        // Empty "menu link title" may confuse users in menu administration.
+        // The text is hidden, so no problem.
+        $title = check_plain($variables['text']);
+        break;
+    }
+
+    return $title;
+  }
+
+  // Call the original theme function for normal menu link.
+  return theme('bootstrap_menu_items_link_default', $variables);
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ *
+ * We replace theme_menu_item_link with our own function.
+ */
+function bootstrap_menu_items_theme_registry_alter(&$registry) {
+  // Save previous value from registry in case another theme overwrites
+  // menu_item_link.
+  $registry['bootstrap_menu_items_link_default'] = $registry['link'];
+  $registry['link']['function'] = 'bootstrap_menu_items_link';
+}
+
+/**
+ * Implements hook_form_FROM_ID_alter().
+ */
+function bootstrap_menu_items_form_menu_edit_item_alter(&$form, &$form_state) {
+  // Some menu items have a pre-defined path which cannot be modified hence no
+  // default_value.
+  if (isset($form['link_path']['#default_value'])) {
+    $default_value = $form['link_path']['#default_value'];
+
+    if (preg_match('/^<header>\/[0-9]+$/', $default_value)) {
+      $default_value = '<header>';
+    }
+    elseif (preg_match('/^<separator>\/[0-9]+$/', $default_value)) {
+      $default_value = '<separator>';
+    }
+
+    $form['link_path']['#default_value'] = $default_value;
+    $form['link_path']['#description'] .= ' ' . t('Enter "%header" to create a header item, enter "%separator" to generate divider item.', array('%header' => '<header>', '%separator' => '<separator>'));
+  }
+}

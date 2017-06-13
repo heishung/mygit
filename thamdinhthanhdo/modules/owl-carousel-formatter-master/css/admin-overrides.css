@@ -1,0 +1,18 @@
+.owl-carousel-fomatter legend {
+  font-size: .875em;
+  background: transparent;
+}
+
+.owl-carousel-fomatter legend a:link,
+.owl-carousel-fomatter legend a:hover,
+.owl-carousel-fomatter legend a:visited {
+  color: #aaa;
+}
+
+.owl-carousel-fomatter .form-item{
+  width: 30%;
+  margin-right: 1em;
+  float: left;
+}
+
+.owl-carousel-fomatter .form-item .form-text { width: 12em; }

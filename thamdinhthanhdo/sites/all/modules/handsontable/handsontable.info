@@ -1,0 +1,11 @@
+name = Handsontable
+description = Create minimalist Excel-like data grids using the Handsontable library.
+core = 7.x
+package = Fields
+dependencies[] = libraries
+; Information added by Drupal.org packaging script on 2016-04-18
+version = "7.x-1.0"
+core = "7.x"
+project = "handsontable"
+datestamp = "1460952842"
+

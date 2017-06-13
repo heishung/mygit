@@ -1,0 +1,574 @@
+<?php
+
+/**
+ * Implementation of hook_field_formatter_info().
+ */
+function owl_carousel_formatter_field_formatter_info() {
+  return array(
+    'owl_carousel' => array(
+      'label' => t('OWL Carousel'),
+      'field types' => array('image','media'),
+      'settings' => array(
+        'imageStyle' => 'large',
+        'singleItem' => 1,
+        'items' => NULL,
+        'navigation' => 0,
+        'pagination' => 1,
+        'scrollPerPage' => 0,
+        'lazyLoad' => 0,
+        'slideSpeed' => 300,
+        'paginationSpeed' => 800,
+        'rewindSpeed' => 1000,
+        'autoPlay' => 0,
+        'stopOnHover' => 1,
+        'navigationText' => NULL,
+        'rewindNav' => 1,
+        'paginationNumbers' => 0,
+        'responsiveRefreshRate' => 200,
+        'theme' => 'owl-theme',
+        'lazyFollow' => 1,
+        'lazyEffect' => 'fade',
+        'autoHeight' => 0,
+        'jsonPath' => NULL,
+        'jsonSuccess' => NULL,
+        'dragBeforeAnimFinish' => 1,
+        'mouseDrag' => 1,
+        'touchDrag' => 1,
+        'addClassActive' => 0,
+        'transitionStyle' => NULL,
+        'breakpointDesktop' => 1199,
+        'breakpointDesktopSmall' => 973,
+        'breakpointTablet' => 840,
+        'breakpointTabletSmall' => 768,
+        'breakpointMobile' => 479,
+        'itemsDesktop' => 4,
+        'itemsDesktopSmall' => 3,
+        'itemsTablet' => 2,
+        'itemsTabletSmall' => 2,
+        'itemsMobile' => 1,
+      ),
+      'description' => t('Display multi-value fields as an OWL Carousel.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function owl_carousel_formatter_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $widget_settings = $field['settings'];
+
+  // some css to make the admin form more manageable...
+  drupal_add_css( drupal_get_path('module', 'owl_carousel_formatter') . '/css/admin-overrides.css');
+
+  dpm( $settings );
+
+  // $element['ui'] = array(
+  //   '#type' => 'fieldset',
+  //   '#title' => t('UI'),
+  //   '#tree' => FALSE,
+  //   '#attributes' => array (
+  //     'class' => array('owl-carousel-fomatter'),
+  //   ),
+  //   '#collapsible' => TRUE,
+  //   '#collapsed' => FALSE,
+  // );
+
+  // $element = array(
+  //   '#type' => 'fieldset',
+  //   '#title' => t('Themeing'),
+  //   '#tree' => FALSE,
+  //   '#attributes' => array (
+  //     'class' => array('owl-carousel-fomatter'),
+  //   ),
+  //   '#collapsible' => TRUE,
+  //   '#collapsed' => TRUE,
+  //  );
+
+  // $element = array(
+  //   '#type' => 'fieldset',
+  //   '#title' => t('Responsiveness'),
+  //   '#attributes' => array (
+  //     'class' => array('owl-carousel-fomatter'),
+  //   ),
+  //   '#tree' => FALSE,
+  //   '#collapsible' => TRUE,
+  //   '#collapsed' => TRUE,
+  // );
+
+  // $element = array(
+  //   '#type' => 'fieldset',
+  //   '#title' => t('Advanced'),
+  //   '#tree' => FALSE,
+  //   '#attributes' => array (
+  //     'class' => array('owl-carousel-fomatter'),
+  //   ),
+  //   '#collapsible' => TRUE,
+  //   '#collapsed' => TRUE,
+  // );
+
+
+  $element['owl-carousel-formatter-style'] = array(
+    '#type' => 'select',
+    '#title' => t('Image style'),
+    '#options' => image_style_options(),
+    '#default_value' => $settings[ 'imageStyle' ],
+    '#description' => t('Choose which image style to render the carousel images.'),
+  );
+
+  $element['singleItem'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('singleItem'),
+    '#default_value' => $settings['singleItem'],
+    '#description' => t('Display only one item. <a href="demos/one.html" target="_blank">See demo</a>'),
+  );
+  
+  $element['items'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Items per page'),
+    '#size' => 3,
+    '#default_value' => $settings['items'],
+    '#description' => t('This variable allows you to set the maximum amount of items displayed at a time with the widest browser width'),
+  );
+
+  $element['navigation'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('navigation'),
+    '#default_value' => $settings['navigation'],
+    '#description' => t('Display "next" and "prev" buttons.'),
+  );
+
+  $element['pagination'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('pagination'),
+    '#default_value' => $settings['pagination'],
+    '#description' => t('Show pagination.'),
+  );
+
+  $element['scrollPerPage'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('scrollPerPage'),
+    '#default_value' => $settings['scrollPerPage'],
+    '#description' => t('Scroll per page not per item.'),
+  );
+
+  $element['slideSpeed'] = array(
+    '#type' => 'textfield',
+    '#title' => t('slideSpeed'),
+    '#size' => 4,
+    '#default_value' => $settings['slideSpeed'],
+    '#description' => t('Slide speed in milliseconds.'),
+  );
+
+  $element['paginationSpeed'] = array(
+    '#type' => 'textfield',
+    '#title' => t('paginationSpeed'),
+    '#size' => 4,
+    '#default_value' => $settings['paginationSpeed'],
+    '#description' => t('Pagination speed in milliseconds.'),
+  );
+  
+  $element['autoPlay'] = array(
+    '#type' => 'checkBox',
+    '#title' => t('autoPlay'),
+    '#default_value' => $settings['autoPlay'],
+    '#description' => t('Change to any integrer for example autoPlay : 5000 to play every 5 seconds. If you set autoPlay: true default speed will be 5 seconds.'),
+  );
+  
+  $element['stopOnHover'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('stopOnHover'),
+    '#default_value' => $settings['stopOnHover'],
+    '#description' => t('Stop autoplay on mouse hover.'),
+  );
+  
+  $element['rewindNav'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('rewindNav'),
+    '#default_value' => $settings['rewindNav'],
+    '#description' => t('Slide to first item on completion. Use rewindSpeed to change animation speed.'),
+  );
+
+  $element['paginationNumbers'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('paginationNumbers'),
+    '#default_value' => $settings['paginationNumbers'],
+    '#description' => t('Show numbers inside pagination buttons.'),
+  );
+  
+  $element['dragBeforeAnimFinish'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('dragBeforeAnimFinish'),
+    '#default_value' => $settings['dragBeforeAnimFinish'],
+    '#description' => t('Ignore whether a transition is done or not before reinstantiating on drag behavior.'),
+  );
+
+ $element['mouseDrag'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('mouseDrag'),
+    '#default_value' => $settings['mouseDrag'],
+    '#description' => t('Turn off/on mouse drag events.'),
+  );
+
+ $element['touchDrag'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('touchDrag'),
+    '#default_value' => $settings['touchDrag'],
+    '#description' => t('Turn off/on touch events.'),
+  );
+
+    $element['theme'] = array(
+    '#type' => 'textfield',
+    '#title' => t('theme'),
+    '#size' => 16,
+    '#default_value' => $settings['theme'],
+    '#description' => t('Default Owl CSS styles for navigation and buttons. Change it to match your own theme.'),
+  );
+
+
+  $element['autoHeight'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('autoHeight'),
+    '#default_value' => $settings['autoHeight'],
+    '#description' => t('Add height to owl-wrapper-outer so you can use diffrent heights on slides. Use it only for one item per page setting.'),
+  );
+
+  $element['addClassActive'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('addClassActive'),
+    '#default_value' => $settings['addClassActive'],
+    '#description' => t('Add "active" classes on visible items. Works with any numbers of items on screen.'),
+  );
+
+  $element['lazyLoad'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('lazyLoad'),
+    '#default_value' => $settings['lazyLoad'],
+    '#description' => t("Delays loading of images. Images outside of viewport won't be loaded before user scrolls to them. Great for mobile devices to speed up page loadings. IMG need special markup class='lazyOwl' and data-src='your img path'. <a href='http://owlgraphic.com/owlcarousel/demos/lazyLoad.html' target='_blank'>See example.</a>"),
+  );
+
+  $element['lazyFollow'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('lazyFollow'),
+    '#default_value' => $settings['lazyFollow'],
+    '#description' => t('When pagination used, it skips loading the images from pages that got skipped. It only loads the images that get displayed in viewport. If set to false, all images get loaded when pagination used. It is a sub setting of the lazy load function.'),
+  );
+
+  $element['lazyEffect'] = array(
+    '#type' => 'textfield',
+    '#title' => t('lazyEffect'),
+    '#size' => 6,
+    '#default_value' => $settings['lazyEffect'],
+    '#description' => t('Default is fadeIn on 400ms speed. Use false to remove that effect.'),
+  );
+
+  $element['transitionStyle'] = array(
+    '#type' => 'textfield',
+    '#title' => t('transitionStyle'),
+    '#size' => 12,
+    '#default_value' => $settings['transitionStyle'],
+    '#description' => t('Add CSS3 transition style. Works only with one item on screen. <a href="demos/transitions.html">See Demo</a>'),
+  );
+
+  $element['jsonPath'] = array(
+    '#type' => 'textfield',
+    '#title' => t('jsonPath'),
+    '#default_value' => $settings['jsonPath'],
+    '#description' => t('Allows you to load directly from a jSon file. The JSON structure you use needs to match the owl JSON structure used here. To use custom JSON structure see jsonSuccess option.'),
+  );
+
+  $element['jsonSuccess'] = array(
+    '#type' => 'textfield',
+    '#title' => t('jsonSuccess'),
+    '#default_value' => $settings['jsonSuccess'],
+    '#description' => t('Success callback for $.getJSON build in into carousel. See demo with custom JSON structure <a href="demos/customJson.html" target="_blank">here</a>.'),
+  );
+
+  $element['responsiveBaseWidth'] = array(
+    '#type' => 'textfield',
+    '#title' => t('responsiveBaseWidth'),
+    '#size' => 6,
+    '#default_value' => $settings['responsiveBaseWidth'],
+    '#description' => t('Owl Carousel checks the window object for browser width changes. You can use any other jQuery selector to check for width changes on. For example with ".owl-demo" Owl will change only if ".owl-demo\'s" width changes.'),
+  );
+
+  $element['breakpointDesktop'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Breakpoint Desktop'),
+    '#size' => 4,
+    '#default_value' => $settings['breakpointDesktop'],
+    '#description' => t('Breakpoint for wide desktop displays (check your theme\'s style).'),
+  );
+
+  $element['breakpointDesktopSmall'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Breakpoint Desktop Small'),
+    '#size' => 4,
+    '#default_value' => $settings['breakpointDesktopSmall'],
+    '#description' => t('Breakpoint for narrow desktop displays, (check your theme\'s style).'),
+  );
+
+  $element['breakpointTablet'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Tablet landscape breakpoint'),
+    '#size' => 4,
+    '#default_value' => $settings['breakpointTablet'],
+    '#description' => t('Breakpoint for tablet\'s in landscape (check your theme\'s style).'),
+  );
+
+  $element['breakpointTabletSmall'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Tablet portrait breakpoint'),
+    '#size' => 4,
+    '#default_value' => $settings['breakpointTabletSmall'],
+    '#description' => t('Breakpoint for tablet\'s in portrait (check your theme\'s style).'),
+  );
+
+  $element['breakpointMobile'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Mobile breakpoint'),
+    '#size' => 4,
+    '#default_value' => $settings['breakpointMobile'],
+    '#description' => t('Breakpoint for tablet\'s in portrait (check your theme\'s style).'),
+  );
+
+ $element['itemsDesktop'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Items to include in wide displays.'),
+    '#size' => 3,
+    '#default_value' => $settings['itemsDesktop'],
+    '#description' => t('The number of items to show on wide displays.'),
+  );
+
+  $element['itemsDesktopSmall'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Items to include in narrow displays.'),
+    '#size' => 3,
+    '#default_value' => $settings['itemsDesktopSmall'],
+    '#description' => t('Breakpoint for narrow desktop displays, (check your theme\'s style).'),
+  );
+
+  $element['itemsTablet'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Items to include on tablets.'),
+    '#size' => 3,
+    '#default_value' => $settings['itemsTablet'],
+    '#description' => t('Breakpoint for tablet\'s in landscape (check your theme\'s style).'),
+  );
+
+  $element['itemsTabletSmall'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Items to include in narrower tablets (and portrait view).'),
+    '#size' => 3,
+    '#default_value' => $settings['itemsTabletSmall'],
+    '#description' => t('Breakpoint for tablet\'s in portrait (check your theme\'s style).'),
+  );
+
+  $element['itemsMobile'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Items to show per page on mobile devices.'),
+    '#size' => 3,
+    '#default_value' => $settings['itemsMobile'],
+    '#description' => t('Breakpoint for tablet\'s in portrait (check your theme\'s style).'),
+  );
+
+  $element['responsive'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('responsive'),
+    '#default_value' => $settings['responsive'],
+    '#description' => t('You can use Owl Carousel on desktop-only websites too! Just change that to "false" to disable resposive capabilities.'),
+  );
+
+  $element['responsiveRefreshRate'] = array(
+    '#type' => 'textfield',
+    '#title' => t('responsiveRefreshRate'),
+    '#size' => 6,
+    '#default_value' => $settings['responsiveRefreshRate'],
+    '#description' => t('Check window width changes every 200ms for responsive actions.'),
+  );
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function owl_carousel_formatter_field_formatter_settings_summary($field, $instance, $view_mode) {
+  // $display = $instance['display'][$view_mode];
+  // $settings = $display['settings'];
+  return 'Display images using the OWL carousel jQuery plugin.';
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function owl_carousel_formatter_theme($existing, $type, $theme, $path) {
+  return array(
+    'owl_carousel_formatter' => array(
+      'variables' => array( 'items'=> NULL, 'settings' => NULL ),
+      'template' => 'theme/owl_carousel_formatter'
+    )
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+
+  $element = array();
+  // if there are no images, dont do anything else
+
+  if(empty($items)){
+    return $element;
+  }
+
+  $modulepath = drupal_get_path('module', 'owl_carousel');
+  $settings = $display['settings'];
+  dpm( $settings );
+  $settings['style'] = strtolower($settings['style']);
+
+  // Media field support (only images currently... change this) 
+  // @todo, owl carousel can handle anything inside the divs, so we could do semantic html video output for media elements too)
+  if ($field['type'] == 'media') {
+
+    foreach ($items as $delta => $item) {
+      if ($item['file']->type == 'image') {
+        $items[$delta] = (array) $item; // Compatibility with 7.x-1.0-beta4 and previous media versions
+        $items[$delta]['uri'] = $item['file']->uri;
+        $items[$delta]['filename'] = $item['file']->filename;
+      }
+    }
+
+    /**
+     * If it's not an image remove it from our items... for now.
+     */
+    $changed = FALSE;
+    foreach($items as $delta => $item) {
+      if ($item['file']->type !== 'image') {
+        unset($items[$delta]);
+        $changed = TRUE;
+      }
+    }
+    // if we removed from $items, reset the array keys
+    if ($changed) { $items = array_values($items); }
+  }
+  
+  // emove unfound files,
+  // to avoid errors when the image is no longer on the server but still in the image field.
+  $changed = FALSE;
+  foreach ($items as $delta => $item) {
+    if (!file_exists( $items[$delta]['uri'])) {
+      unset($items[$delta]);
+      $changed = TRUE;
+    }
+  };
+  
+  // if we removed from $items, reset the array keys
+  if ($changed) { $items = array_values($items); }
+  // if there are no images, dont do anything else
+  if(empty($items)) { return $element; }
+
+  // prepare the renderable array
+  $renderitems = array();
+  // get the unique entity id for later
+  $ids = entity_extract_ids($entity_type, $entity);
+  $entity_id =  $ids[0];
+  foreach ($items as $delta => $item){
+    // Grab and sanitize image information
+    if (!empty($item['title'])) {
+      // Sanitize the title
+      if(strpos($item['title'], '<') !== FALSE) {
+        $item['title'] = strip_tags($item['title']);
+      }
+    } else {
+      $item['title'] = ''; // prevents php notices
+    }
+    $renderitems['items'][$delta]['title'] = $item['title'];
+    // whats this do?
+    $item['filename'] = $item['filename'] = '';
+
+    // Check if alt attribute is already set and sanitize it, if not use the filename as alt attribute
+    if (isset($item['alt']) && !empty($item['alt'])) {
+      if(strpos($item['alt'], '<') !== FALSE) {
+        $item['alt'] = strip_tags($item['alt']);
+      }
+    } else {
+      $item['alt'] = $item['filename'];
+    }
+    $renderitems['items'][$delta]['alt'] = $item['alt'];
+    // If the title is empty use alt or the node title in that order.
+    if (empty($item['title'])) {
+      if (!empty($item['alt'])) {
+        $item['title'] = $item['alt'];
+      } else {
+        if(!empty($entity->title)){
+          if(strpos($entity->title, '<') !== FALSE) {
+            $item['title'] = strip_tags($entity->title);
+          } else {
+            $item['title'] = $entity->title;
+          }
+        }
+      }
+    }
+    // prepare the unique hash id per item
+    $id = $field['field_name'] . '-' . $entity_id;
+    $renderitems['items'][$delta]['hash_id'] = 'item-' . $delta . '-' . $id;
+    $renderitems['items'][$delta]['item'] = theme('image_formatter', array(
+        'item' => $item,
+      )
+    );
+  }
+
+  // unsetting elements set to NULL before sending over to the JS as the presense of some keys is enough to cause odd behavior.
+  foreach( $settings as $key => $setting ){
+    if( $setting == NULL ){
+      unset( $settings[$key] );
+    }
+  }
+
+  // combine breakpoints and items into the array format OWL Carousel asks for and removes the 'breakpoint' key from the settings
+  if( isset( $settings['breakpointDesktop'] ) ){
+    $settings['itemsDesktop'] = array( $settings['breakpointDesktop'], $settings['itemsDesktop'] );
+    unset( $settings['breakpointDesktop'] );
+  }
+  if( isset( $settings['breakpointDesktopSmall'] ) ){
+    $settings['itemsDesktopSmall'] = array( $settings['breakpointDesktopSmall'], $settings['itemsDesktopSmall'] );
+    unset( $settings['breakpointDesktopSmall'] );
+  }
+  if( isset( $settings['breakpointTablet'] ) ){
+    $settings['itemsTablet'] = array( $settings['breakpointTablet'], $settings['itemsTablet'] );
+    unset( $settings['breakpointTablet'] );
+  }
+  if( isset( $settings['breakpointTabletSmall'] ) ){
+    $settings['itemsTabletSmall'] = array( $settings['breakpointTabletSmall'], $settings['itemsTabletSmall'] );
+    unset( $settings['breakpointTabletSmall'] );
+  }
+  if( isset( $settings['breakpointMobile'] ) ){
+    $settings['itemsMobile'] = array( $settings['breakpointMobile'], $settings['itemsMobile'] );
+    unset( $settings['breakpointMobile'] );
+  }
+
+  if( count($items) > 1){
+ 
+    // @todo allow min and non-min versions from settings
+    drupal_add_js( libraries_get_path( 'owl-carousel' ) . '/owl.carousel.min.js' );
+    drupal_add_js( drupal_get_path( 'module', 'owl_carousel_formatter' ) . '/js/owl_carousel_formatter.js');
+    drupal_add_js( array( 'owl_carousel_formatter' => $settings ), 'setting');
+ 
+    // @todo make these both checkbox optional via admin panel
+    drupal_add_css( libraries_get_path('owl-carousel') . '/owl.carousel.css');
+    drupal_add_css( libraries_get_path('owl-carousel') . '/owl.theme.css');
+ 
+  }
+
+  // prepare the variables for our theme function
+  $element['#settings'] = $settings;
+  $element['#items'] = $renderitems['items'];
+  $element['#theme'] ='owl_carousel_formatter';
+  return $element;
+}
+

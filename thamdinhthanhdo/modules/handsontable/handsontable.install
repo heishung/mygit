@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * @file
+ * Contains install functions for Handsontable module, which provides Drupal integration with the Handsontable JavaScript library.
+ */
+
+/**
+ * Implements hook_field_schema().
+ */
+function handsontable_field_schema($field) {
+  $columns = array(
+    'handsontable' => array(
+      'type' => 'text',
+      'not null' => TRUE
+    ),
+  );
+  return array(
+    'columns' => $columns,
+  );
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function handsontable_requirements($phase) {
+  $requirements = array();
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  // Report whether all components are installed on runtime
+  if ($phase == 'runtime') {
+    $requirements['handsontable'] = array(
+      'title' => $t('Handsontable'),
+      'description' => $t('Installed and ready to use.'),
+      'severity' => REQUIREMENT_OK,
+      'value' => 'Enabled',
+    );
+    _handsontable_requirements_library_installed($requirements);
+  }
+  return $requirements;
+}
+
+/**
+ * Check if the Handsontable library is available
+ *
+ * @param array $requirements
+ *  Requirements definition
+ */
+function _handsontable_requirements_library_installed(&$requirements) {
+  $t = get_t();
+
+  $path = libraries_get_path('handsontable');
+  $installed = file_exists($path . '/handsontable.full.min.js') && file_exists($path . '/handsontable.full.min.css');
+
+  if (!$installed) {
+    $requirements['handsontable']['description'] = $t('Required Handsontable files not found. Please consult the README.txt for installation instructions.');
+    $requirements['handsontable']['severity'] = REQUIREMENT_ERROR;
+    $requirements['handsontable']['value'] = $t('Handsontable files not found.');
+    return;
+  }
+}

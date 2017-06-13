@@ -1,0 +1,12 @@
+
+name = OWL Carousel Formatter
+description = Provides an OWL Carousel formatter for image and media fields.
+dependencies[] = image
+dependencies[] = file
+
+core = 7.x
+package = User interface
+
+files[] = owl_carousel_formatter.install
+files[] = owl_carousel_formatter.module
+files[] = theme/owl_carousel_formatter.tpl.php

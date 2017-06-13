@@ -1,0 +1,251 @@
+<?php
+
+/**
+ * @file
+ * Module file for the Handsontable module, which provides Drupal integration with the Handsontable JavaScript library.
+ */
+
+/**
+ * Implements hook_library().
+ */
+function handsontable_library() {
+  $module_path = drupal_get_path('module', 'handsontable');
+  $library_path = libraries_get_path('handsontable');
+
+  $libraries['handsontable'] = array(
+    'title' => 'Handsontable',
+    'website' => 'http://handsontable.com/',
+    'version' => '0.16.1',
+    'js' => array(
+      $library_path . '/handsontable.full.min.js' => array(),
+      $module_path . '/assets/js/handsontable.config.js' => array(),
+    ),
+    'css' => array(
+      $library_path . '/handsontable.full.min.css' => array(),
+      $module_path . '/assets/css/handsontable.custom.css' => array(),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+ * Implements hook_help().
+ */
+function handsontable_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#handsontable':
+      return "<p>" . t("This module provides integration with the <a href='!handsontable'>Handsontable</a>
+        JavaScript library. To use, add a new field with the Handsontable type and widget.",
+        array('!handsontable' => url('http://www.handsontable.com'))) . "</p>";
+  }
+}
+
+/**
+ * Implements hook_elements().
+ */
+function handsontable_element_info() {
+  // This is the definition for the new form API element.
+  return array(
+    'handsontable' => array(
+      '#input' => TRUE,
+      '#element_validate' => array('handsontable_validate'),
+      '#theme' => 'handsontable',
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function handsontable_theme() {
+  return array(
+    'handsontable' => array(
+      'render element' => 'element',
+    ),
+    'handsontable_table_display' => array(
+      'variables' => array('item' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implements theme_hook().
+ */
+function theme_handsontable($variables) {
+  $element = $variables['element'];
+
+  if (!isset($element['#id'])) {
+    $element['#id'] = drupal_html_id('edit-' . implode('-', $element['#parents']));
+  }
+
+  $class = array('form-handsontable_field');
+  unset($element['#prefix']);
+  unset($element['#suffix']);
+  _form_set_class($element, $class);
+
+  if (isset($element['#value']) && strlen($element['#value'])) {
+    $default_value = $element['#value'];
+  }
+  else {
+    $default_value = NULL;
+  }
+
+  $settings = array(
+    'ids' => array($element['#id']),
+    'data' => array($default_value),
+  );
+
+  $element['#attached']['library'][] = array(
+    'handsontable',
+    'handsontable'
+  );
+
+  $element['#attached']['js'][] = array(
+    'data' => array('handsontable' => $settings),
+    'type' => 'setting',
+  );
+
+  $output = '';
+  $output .= '<div class="handsontable-container">';
+  $output .= '<a class="table-add-row" data-action="addRow" href="#addrow" alt=""Add a row">Add row</a> ';
+  $output .= '<a class="table-add-col" data-action="addCol" href="#addcol" alt=""Add a column">Add column</a> ';
+  $output .= '<a class="table-set-size" data-action="showModal" href="#setsize" alt=""Set the table size">Set size</a> ';
+  $name = isset($element['#name']) ? $element['#name'] : $element['#id'];
+  $value = isset($element['#value']) ? check_plain($element['#value']) : '';
+  $output .= '<input type="hidden" name="' . $name . '" id="' . $element['#id'] . '"' .
+             ' value="' . $value . '"' . drupal_attributes($element['#attributes']) . ' />';
+  $output .= '<div id="' . $element['#id'] . '-table" class="handsontable "></div>';
+  $output .= '</div>';
+
+  $element['#children'] = $output;
+  $element['#theme'] = 'form_element';
+
+  return drupal_render($element);
+}
+
+/**
+ * Implements hook_validate().
+ */
+function handsontable_validate($element, &$form_state) {
+  if (preg_match("/<[^<]+>/",$element['#value'], $matches) != 0) {
+    form_error($element, t('HTML is not allowed in the table grid.'));
+  }
+}
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function handsontable_field_is_empty($item, $field) {
+  return empty($item['handsontable']) && (string) $item['handsontable'] !== '0';
+}
+
+/**
+ * Implements hook_field_info().
+ */
+function handsontable_field_info() {
+  return array(
+    'handsontable' => array(
+      'label' => t('Handsontable'),
+      'description' => t('Handsontable data grid editor'),
+      'default_widget' => 'handsontable',
+      'default_formatter' => 'handsontable_table_display',
+      'property_type' => 'text',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function handsontable_field_formatter_info() {
+  return array(
+    'handsontable_table_display' => array(
+      'label' => t('Table'),
+      'field types' => array('handsontable'),
+    ),
+    'handsontable_json_display' => array(
+      'label' => t('JSON'),
+      'field types' => array('handsontable'),
+    )
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function handsontable_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  foreach ($items as $delta => $item) {
+    switch ($display['type']) {
+      case 'handsontable_table_display':
+        $element[$delta] = array(
+          '#theme' => 'handsontable_table_display',
+          '#item' => $item['handsontable'],
+        );
+        break;
+
+      case 'handsontable_json_display':
+        $element[$delta]['#markup'] = $item['handsontable'];
+        break;
+    }
+  }
+  return $element;
+}
+
+/**
+ * Implements theme_hook().
+ */
+function theme_handsontable_table_display($variables) {
+  $data = json_decode($variables['item'], TRUE);
+  $headers = $data[0];
+  $rows = array_splice($data, 1);
+  $attributes = array('class' => array('handsontable_table_display'));
+
+  $output = theme('table', array(
+    'header' => $headers,
+    'rows' => $rows,
+    'attributes' => $attributes,
+  ));
+
+  return $output;
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function handsontable_field_widget_info() {
+  return array(
+    'handsontable' => array(
+      'label' => t('Handsontable'),
+      'field types' => array('handsontable'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_widget_form().
+ */
+function handsontable_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $value = '';
+  if (isset($instance['default_value'][$delta]['handsontable'])) {
+    $value = $instance['default_value'][$delta]['handsontable'];
+  }
+  if (isset($items[$delta]['handsontable'])) {
+    $value = $items[$delta]['handsontable'];
+  }
+  $element += array(
+    '#delta' => $delta,
+  );
+  $element['handsontable'] = array();
+  if ($instance['widget']['type'] == 'handsontable') {
+    $element['handsontable'] += array(
+      '#title' => $instance['label'],
+      '#type' => 'handsontable',
+      '#default_value' => $value,
+      '#cardinality' => $field['cardinality'],
+      '#description' => $element['#description'],
+    );
+  }
+  return $element;
+}
